@@ -1,0 +1,2 @@
+#spring.data.mongodb.uri: ${vcap.services.mongolab[0].credentials.uri}
+#spring.data.mongodb.uri: ${cloud.services.mongo.connection.uri}
