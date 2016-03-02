@@ -4,9 +4,9 @@ set -e
 export GRADLE_OPTS=-Dorg.gradle.native=false
 BINARY_DIR=$PWD/binary
 
-version=`cat version/number`
+#version=`cat version/number`
 cd code-repo
-gradle assemble -PVersion=$version
-
+#gradle assemble -PVersion=$version
+gradle assemble
 mv build/libs/*.war $BINARY_DIR
 ls $BINARY_DIR

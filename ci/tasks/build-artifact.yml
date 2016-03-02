@@ -5,7 +5,7 @@ image: docker:///kidikarus/gradle
 
 inputs:
   - name: code-repo
-  - name: version
+#  - name: version
 
 run:
   path: code-repo/ci/tasks/build-artifact.sh
