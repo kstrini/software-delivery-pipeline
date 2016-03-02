@@ -1,0 +1,13 @@
+---
+platform: linux
+
+image: docker:///kidikarus/cf-cli
+
+inputs:
+  - name: code-repo
+
+run:
+  path: code-repo/ci/tasks/cats.sh
+
+params:
+  CODE_URL:

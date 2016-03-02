@@ -1,0 +1,119 @@
+---
+jobs:
+- name: unit
+  plan:
+  - get: code-repo
+    trigger: true
+  - task: unit
+    file: code-repo/ci/tasks/unit.yml
+
+- name: build-binary
+  serial: true
+  plan:
+  - get: code-repo
+    passed: [unit]
+    trigger: true
+  - get: version
+    params: {bump: patch}
+  - task: build-artifact
+    file: code-repo/ci/tasks/build-artifact.yml
+    timeout: 5m
+  - put: code-release
+    params: {file: binary/*.war}
+  - put: code-repo
+    params:
+      repository: code-repo
+      tag: version/number
+  - put: version
+    params: {file: version/number}
+
+- name: acceptance-tests
+  plan:
+  - aggregate:
+    - get: code-release
+      passed: [build-binary]
+      trigger: true
+    - get: code-repo
+      passed: [build-binary]
+      trigger: true
+  - task: deploy-to-cats
+    file: code-repo/ci/tasks/cf-deployment.yml
+    config:
+      params:
+        API_ENDPOINT: {{cf-api}}
+        USERNAME: {{cf-username}}
+        PASSWORD: {{cf-passwd}}
+        ORG: {{cf-org}}
+        SPACE: {{cf-space-cats}}
+        HOST: {{cf-host-cats}}
+  - task: cats
+    file: code-repo/ci/tasks/cats.yml
+    config:
+      params:
+        CODE_URL: {{cats-curl-url}}
+
+- name: promote-to-uat
+  plan:
+  - aggregate:
+    - get: code-release
+      passed: [acceptance-tests]
+      trigger: true
+    - get: code-repo
+      passed: [acceptance-tests]
+      trigger: true
+  - task: deploy-to-uat
+    file: code-repo/ci/tasks/cf-deployment.yml
+    config:
+      params:
+        API_ENDPOINT: {{cf-api}}
+        USERNAME: {{cf-username}}
+        PASSWORD: {{cf-passwd}}
+        ORG: {{cf-org}}
+        SPACE: {{cf-space-uat}}
+        HOST: {{cf-host-uat}}
+
+- name: manual-deploy-to-prod
+  serial: true
+  plan:
+  - aggregate:
+    - get: code-release
+      passed: [promote-to-uat]
+    - get: code-repo
+      passed: [promote-to-uat]
+  - task: deploy-to-prod
+    file: code-repo/ci/tasks/cf-deployment.yml
+    config:
+      params:
+        API_ENDPOINT: {{cf-api}}
+        USERNAME: {{cf-username}}
+        PASSWORD: {{cf-passwd}}
+        ORG: {{cf-org}}
+        SPACE: {{cf-space-prod}}
+        HOST: {{cf-host-prod}}
+
+resources:
+- name: code-repo
+  type: git
+  source:
+    uri: git@github.com:kstrini/micropcf-exampleApp.git
+    branch: master
+    private_key: {{git-repo-key}}
+
+- name: version
+  type: semver
+  source:
+    bucket: code-pipeline-artifacts
+    region_name: us-west-2
+    key: current-version
+    access_key_id: {{s3-access-key-id}}
+    secret_access_key: {{s3-secret-access-key}}
+    initial_version: 1.0.0
+
+- name: code-release
+  type: s3
+  source:
+    bucket: code-pipeline-artifacts
+    region_name: us-west-2
+    regexp: simple-mongodb-rest-app-(.*).war
+    access_key_id: {{s3-access-key-id}}
+    secret_access_key: {{s3-secret-access-key}}

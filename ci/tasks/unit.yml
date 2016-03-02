@@ -1,0 +1,10 @@
+---
+platform: linux
+
+image: docker:///kidikarus/gradle
+
+inputs:
+  - name: code-repo
+
+run:
+  path: code-repo/ci/tasks/unit.sh
