@@ -39,7 +39,7 @@ def getVersionName = {
 
 jar {
 	manifest {
-		attributes 'Implementation-Title': 'Spring Sample Application', 'Implementation-Version': version
+		attributes 'Implementation-Title': 'Spring Sample Application', 'Implementation-Version': getVersionName()
 	}
 }
 
