@@ -13,19 +13,11 @@ jobs:
   - get: code-repo
     passed: [unit]
     trigger: true
-  - get: version
-    params: {bump: patch}
   - task: build-artifact
     file: code-repo/ci/tasks/build-artifact.yml
     timeout: 5m
   - put: code-release
     params: {file: binary/*.war}
-  - put: code-repo
-    params:
-      repository: code-repo
-      tag: version/number
-  - put: version
-    params: {file: version/number}
 
 - name: acceptance-tests
   plan:
