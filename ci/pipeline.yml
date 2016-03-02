@@ -95,7 +95,7 @@ resources:
 - name: code-repo
   type: git
   source:
-    uri: git@github.com:kstrini/micropcf-exampleApp.git
+    uri: git@github.com:kstrini/software-delivery-pipeline.git
     branch: master
     private_key: {{git-repo-key}}
 
